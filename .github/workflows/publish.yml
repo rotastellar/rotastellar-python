@@ -1,0 +1,58 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish (all, rotastellar, rotastellar-compute, rotastellar-intel)'
+        required: true
+        default: 'all'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # For trusted publishing
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build and publish rotastellar
+        if: github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar'
+        run: |
+          cd packages/rotastellar
+          python -m build
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Build and publish rotastellar-compute
+        if: github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar-compute'
+        run: |
+          cd packages/rotastellar-compute
+          python -m build
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Build and publish rotastellar-intel
+        if: github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar-intel'
+        run: |
+          cd packages/rotastellar-intel
+          python -m build
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
