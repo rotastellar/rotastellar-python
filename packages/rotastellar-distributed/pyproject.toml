@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rotastellar-distributed"
+version = "0.0.1"
+description = "Distributed compute coordination for Earth-space AI workloads"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [{name = "Rota, Inc.", email = "hello@rotastellar.com"}]
+keywords = [
+    "space",
+    "distributed-computing",
+    "federated-learning",
+    "gradient-compression",
+    "earth-space-coordination",
+    "model-partitioning",
+    "orbital-compute"
+]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: System :: Distributed Computing",
+]
+
+[project.urls]
+Homepage = "https://rotastellar.com/products/distributed-compute"
+Documentation = "https://docs.rotastellar.com/sdks/python/distributed"
+Repository = "https://github.com/rotastellar/rotastellar-python"
+
+[project.optional-dependencies]
+pytorch = ["torch>=2.0"]
+tensorflow = ["tensorflow>=2.12"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rotastellar_distributed"]
