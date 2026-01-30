@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rotastellar-distributed"
-version = "0.1.0"
+version = "0.1.1"
 description = "Distributed compute coordination for Earth-space AI workloads"
 readme = "README.md"
 license = {text = "MIT"}
