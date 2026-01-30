@@ -4,12 +4,22 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rotastellar-distributed"
-version = "0.0.1"
+version = "0.1.0"
 description = "Distributed compute coordination for Earth-space AI workloads"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
-authors = [{name = "Rota, Inc.", email = "hello@rotastellar.com"}]
+authors = [
+    {name = "Subhadip Mitra", email = "subhadipmitra@rotastellar.com"},
+    {name = "RotaStellar Research", email = "research@rotastellar.com"},
+]
+maintainers = [
+    {name = "Subhadip Mitra", email = "subhadipmitra@rotastellar.com"},
+    {name = "RotaStellar Research", email = "research@rotastellar.com"},
+]
+dependencies = [
+    "rotastellar>=0.1.0",
+]
 keywords = [
     "space",
     "distributed-computing",

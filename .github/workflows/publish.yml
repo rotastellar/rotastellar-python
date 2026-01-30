@@ -1,14 +1,24 @@
 name: Publish to PyPI
 
 on:
+  push:
+    tags:
+      - 'v*'
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       package:
-        description: 'Package to publish (all, rotastellar, rotastellar-compute, rotastellar-intel)'
+        description: 'Package to publish'
         required: true
         default: 'all'
+        type: choice
+        options:
+          - all
+          - rotastellar
+          - rotastellar-compute
+          - rotastellar-intel
+          - rotastellar-distributed
 
 jobs:
   publish:
@@ -28,31 +38,41 @@ jobs:
         run: pip install build twine
 
       - name: Build and publish rotastellar
-        if: github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar'
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar'
         run: |
           cd packages/rotastellar
           python -m build
-          twine upload dist/*
+          twine upload dist/* --skip-existing
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
       - name: Build and publish rotastellar-compute
-        if: github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar-compute'
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar-compute'
         run: |
           cd packages/rotastellar-compute
           python -m build
-          twine upload dist/*
+          twine upload dist/* --skip-existing
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
       - name: Build and publish rotastellar-intel
-        if: github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar-intel'
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar-intel'
         run: |
           cd packages/rotastellar-intel
           python -m build
-          twine upload dist/*
+          twine upload dist/* --skip-existing
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Build and publish rotastellar-distributed
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.package == 'all' || github.event.inputs.package == 'rotastellar-distributed'
+        run: |
+          cd packages/rotastellar-distributed
+          python -m build
+          twine upload dist/* --skip-existing
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
