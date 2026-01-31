@@ -14,10 +14,13 @@ Design decisions:
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, TypeVar, Generic, Callable, AsyncIterator, Iterator
 import math
 
 from .errors import ValidationError
+
+
+T = TypeVar("T")
 
 
 # Earth constants
@@ -289,4 +292,120 @@ class Satellite:
             position=Position.from_dict(data["position"])
             if data.get("position")
             else None,
+        )
+
+
+class PaginatedResponse(Generic[T]):
+    """Paginated response for list endpoints.
+
+    Supports iteration, async iteration, and manual pagination.
+
+    Attributes:
+        items: Current page of items
+        has_more: Whether more pages are available
+        total: Total number of items (if known)
+        limit: Page size
+        offset: Current offset
+
+    Example:
+        >>> # Manual pagination
+        >>> page = client.list_satellites(constellation="starlink", limit=100)
+        >>> for sat in page.items:
+        ...     print(sat.name)
+        >>> if page.has_more:
+        ...     next_page = page.next_page()
+
+        >>> # Iteration (auto-pagination)
+        >>> for sat in client.list_satellites(constellation="starlink"):
+        ...     print(sat.name)
+
+        >>> # Async iteration
+        >>> async for sat in async_client.list_satellites(constellation="starlink"):
+        ...     print(sat.name)
+    """
+
+    def __init__(
+        self,
+        items: List[T],
+        has_more: bool,
+        total: Optional[int],
+        limit: int,
+        offset: int,
+        fetch_next: Optional[Callable[[], "PaginatedResponse[T]"]] = None,
+        fetch_next_async: Optional[Callable[[], "PaginatedResponse[T]"]] = None,
+    ):
+        self.items = items
+        self.has_more = has_more
+        self.total = total
+        self.limit = limit
+        self.offset = offset
+        self._fetch_next = fetch_next
+        self._fetch_next_async = fetch_next_async
+
+    def __len__(self) -> int:
+        """Return number of items in current page."""
+        return len(self.items)
+
+    def __iter__(self) -> Iterator[T]:
+        """Iterate through all pages (sync).
+
+        Automatically fetches next pages when current page is exhausted.
+        """
+        page: Optional[PaginatedResponse[T]] = self
+        while page is not None:
+            for item in page.items:
+                yield item
+            if page.has_more and page._fetch_next:
+                page = page._fetch_next()
+            else:
+                page = None
+
+    async def __aiter__(self) -> AsyncIterator[T]:
+        """Iterate through all pages (async).
+
+        Automatically fetches next pages when current page is exhausted.
+        """
+        page: Optional[PaginatedResponse[T]] = self
+        while page is not None:
+            for item in page.items:
+                yield item
+            if page.has_more and page._fetch_next_async:
+                page = await page._fetch_next_async()
+            else:
+                page = None
+
+    def next_page(self) -> "PaginatedResponse[T]":
+        """Fetch the next page of results.
+
+        Returns:
+            Next page of results
+
+        Raises:
+            StopIteration: If no more pages are available
+        """
+        if not self.has_more:
+            raise StopIteration("No more pages available")
+        if not self._fetch_next:
+            raise RuntimeError("No fetch function available for pagination")
+        return self._fetch_next()
+
+    async def next_page_async(self) -> "PaginatedResponse[T]":
+        """Fetch the next page of results (async).
+
+        Returns:
+            Next page of results
+
+        Raises:
+            StopIteration: If no more pages are available
+        """
+        if not self.has_more:
+            raise StopIteration("No more pages available")
+        if not self._fetch_next_async:
+            raise RuntimeError("No async fetch function available for pagination")
+        return await self._fetch_next_async()
+
+    def __repr__(self) -> str:
+        return (
+            f"PaginatedResponse(items={len(self.items)}, "
+            f"has_more={self.has_more}, total={self.total})"
         )

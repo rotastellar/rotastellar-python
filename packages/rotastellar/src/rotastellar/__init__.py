@@ -45,6 +45,7 @@ from .types import (
     Orbit,
     Satellite,
     TimeRange,
+    PaginatedResponse,
     EARTH_RADIUS_KM,
     EARTH_MU,
 )
@@ -83,6 +84,7 @@ __all__ = [
     "Orbit",
     "Satellite",
     "TimeRange",
+    "PaginatedResponse",
     "EARTH_RADIUS_KM",
     "EARTH_MU",
     # Config
