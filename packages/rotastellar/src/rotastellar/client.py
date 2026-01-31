@@ -171,6 +171,45 @@ class RotaStellarClient:
         response = self.http.get(f"/satellites/{satellite_id}/position", params=params)
         return Position.from_dict(response)
 
+    def get_trajectory(
+        self,
+        satellite_id: str,
+        *,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        interval_sec: int = 60,
+    ) -> List[Dict[str, Any]]:
+        """Get predicted trajectory for a satellite.
+
+        Args:
+            satellite_id: Satellite ID or NORAD number
+            start: Start time ISO 8601 (default: now)
+            end: End time ISO 8601 (default: +2 hours)
+            interval_sec: Time interval between points in seconds
+
+        Returns:
+            List of trajectory points with timestamp, lat, lon, altitude
+
+        Example:
+            >>> from datetime import datetime, timedelta
+            >>> trajectory = client.get_trajectory(
+            ...     "25544",
+            ...     start=datetime.utcnow().isoformat(),
+            ...     end=(datetime.utcnow() + timedelta(hours=2)).isoformat(),
+            ...     interval_sec=60
+            ... )
+            >>> for point in trajectory:
+            ...     print(f"{point['timestamp']}: {point['lat']:.2f}, {point['lon']:.2f}")
+        """
+        params: Dict[str, Any] = {"interval_sec": interval_sec}
+        if start:
+            params["start"] = start
+        if end:
+            params["end"] = end
+
+        response = self.http.get(f"/satellites/{satellite_id}/trajectory", params=params)
+        return response.get("points", [])
+
     # =========================================================================
     # Conjunction Analysis
     # =========================================================================
@@ -214,6 +253,49 @@ class RotaStellarClient:
 
         response = self.http.get("/conjunctions", params=params)
         return response.get("data", [])
+
+    # =========================================================================
+    # Pattern Detection
+    # =========================================================================
+
+    def list_patterns(
+        self,
+        *,
+        satellite_id: str,
+        lookback_days: int = 30,
+        pattern_type: Optional[str] = None,
+        min_confidence: float = 0.7,
+    ) -> List[Dict[str, Any]]:
+        """Detect anomalies and maneuvers in satellite behavior.
+
+        Args:
+            satellite_id: Satellite ID or NORAD number
+            lookback_days: Number of days to analyze (default: 30)
+            pattern_type: Filter by type (maneuver, anomaly, proximity, operational)
+            min_confidence: Minimum confidence threshold (0-1)
+
+        Returns:
+            List of detected patterns with type, description, and confidence
+
+        Example:
+            >>> patterns = client.list_patterns(
+            ...     satellite_id="44832",  # COSMOS-2542
+            ...     lookback_days=30,
+            ...     min_confidence=0.8
+            ... )
+            >>> for p in patterns:
+            ...     print(f"{p['type']}: {p['description']} ({p['confidence']:.0%})")
+        """
+        params: Dict[str, Any] = {
+            "satellite": satellite_id,
+            "lookback_days": lookback_days,
+            "min_confidence": min_confidence,
+        }
+        if pattern_type:
+            params["type"] = pattern_type
+
+        response = self.http.get("/patterns", params=params)
+        return response.get("patterns", [])
 
     # =========================================================================
     # Planning Operations

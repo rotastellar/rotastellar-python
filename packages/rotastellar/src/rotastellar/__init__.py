@@ -32,6 +32,13 @@ __url__ = "https://rotastellar.com"
 # Main client
 from .client import RotaStellarClient
 
+# Async client (lazy import to avoid requiring httpx)
+def __getattr__(name):
+    if name == "AsyncRotaStellarClient":
+        from .async_client import AsyncRotaStellarClient
+        return AsyncRotaStellarClient
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 # Types
 from .types import (
     Position,
@@ -70,6 +77,7 @@ __all__ = [
     "__url__",
     # Main client
     "RotaStellarClient",
+    "AsyncRotaStellarClient",
     # Types
     "Position",
     "Orbit",
